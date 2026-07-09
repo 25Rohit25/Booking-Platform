@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid()) @db.Uuid
+  fullName  String    @db.VarChar(255)
+  email     String    @unique @db.VarChar(255)
+  password  String    @db.VarChar(255)
+  services  Service[] // A user (staff/admin) can create multiple services
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([email])
+}
+
+model Service {
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String    @db.VarChar(255)
+  description String?   @db.Text
+  duration    Int       // Duration in minutes
+  price       Decimal   @db.Decimal(10, 2)
+  isActive    Boolean   @default(true)
+  createdById String    @db.Uuid
+  createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([createdById])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Booking {
+  id            String        @id @default(uuid()) @db.Uuid
+  customerName  String        @db.VarChar(255)
+  customerEmail String        @db.VarChar(255)
+  customerPhone String?       @db.VarChar(50)
+  bookingDate   DateTime      @db.Date
+  bookingTime   DateTime      @db.Time
+  status        BookingStatus @default(PENDING)
+  notes         String?       @db.Text
+  serviceId     String        @db.Uuid
+  service       Service       @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Application layer manages double-booking logic to avoid lockouts
+  
+  @@index([serviceId])
+  @@index([customerEmail])
+  @@index([status])
+  @@index([bookingDate])
+  @@index([createdAt])
+}

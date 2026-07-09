@@ -1,0 +1,63 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: rootpassword
+          POSTGRES_DB: booking_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Generate Prisma Client
+      run: npx prisma generate
+      
+    - name: Apply Migrations
+      env:
+        DATABASE_URL: postgresql://root:rootpassword@localhost:5432/booking_test?schema=public
+      run: npx prisma migrate deploy
+
+    - name: Run Linting
+      run: npm run lint
+      
+    - name: Run Format Check
+      run: npm run format
+      
+    - name: Run Unit Tests
+      run: npm run test
+
+    - name: Run E2E Tests
+      env:
+        DATABASE_URL: postgresql://root:rootpassword@localhost:5432/booking_test?schema=public
+      run: npm run test:e2e
+      
+    - name: Build Project
+      run: npm run build
