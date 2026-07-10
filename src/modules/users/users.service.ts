@@ -1,6 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 export type UserWithoutPassword = Omit<User, 'password'>;
 
@@ -42,5 +43,35 @@ export class UsersService {
     }
     const { password, ...result } = user;
     return result;
+  }
+
+  async updateRefreshToken(userId: string, refreshToken: string): Promise<void> {
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { hashedRefreshToken },
+    });
+  }
+
+  async removeRefreshToken(userId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { hashedRefreshToken: null },
+    });
+  }
+
+  async getUserIfRefreshTokenMatches(refreshToken: string, userId: string): Promise<UserWithoutPassword | null> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user || !user.hashedRefreshToken) {
+      return null;
+    }
+
+    const isRefreshTokenMatching = await bcrypt.compare(refreshToken, user.hashedRefreshToken);
+    if (isRefreshTokenMatching) {
+      const { password, ...result } = user;
+      return result;
+    }
+    return null;
   }
 }

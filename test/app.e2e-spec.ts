@@ -1,10 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
+import request from 'supertest';
 import { AppModule } from './../src/app.module';
+import { TransformInterceptor } from './../src/common/interceptors/transform.interceptor';
 
 describe('Booking Platform E2E (Phase 7)', () => {
   let app: INestApplication;
+  let token: string;
+  let refreshToken: string;
+  const testEmail = `e2e-${Date.now()}@example.com`;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -12,7 +16,13 @@ describe('Booking Platform E2E (Phase 7)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.enableVersioning({
+      type: VersioningType.URI,
+      defaultVersion: '1',
+      prefix: 'api/v',
+    });
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+    app.useGlobalInterceptors(new TransformInterceptor());
     await app.init();
   });
 
@@ -21,12 +31,10 @@ describe('Booking Platform E2E (Phase 7)', () => {
   });
 
   describe('Authentication Flow', () => {
-    let token: string;
-
     it('/api/v1/auth/register (POST) - should create a new user', () => {
       return request(app.getHttpServer())
         .post('/api/v1/auth/register')
-        .send({ fullName: 'E2E User', email: 'e2e@example.com', password: 'StrongPassword123!' })
+        .send({ fullName: 'E2E User', email: testEmail, password: 'StrongPassword123!' })
         .expect(201)
         .expect((res) => {
           expect(res.body.success).toBe(true);
@@ -36,11 +44,37 @@ describe('Booking Platform E2E (Phase 7)', () => {
     it('/api/v1/auth/login (POST) - should return JWT', () => {
       return request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'e2e@example.com', password: 'StrongPassword123!' })
+        .send({ email: testEmail, password: 'StrongPassword123!' })
         .expect(200)
         .expect((res) => {
           expect(res.body.data.access_token).toBeDefined();
+          expect(res.body.data.refresh_token).toBeDefined();
           token = res.body.data.access_token;
+          refreshToken = res.body.data.refresh_token;
+        });
+    });
+
+    it('/api/v1/auth/refresh (POST) - should refresh JWT', () => {
+      return request(app.getHttpServer())
+        .post('/api/v1/auth/refresh')
+        .set('Authorization', `Bearer ${refreshToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.data.access_token).toBeDefined();
+          expect(res.body.data.refresh_token).toBeDefined();
+          // Update tokens for subsequent requests
+          token = res.body.data.access_token;
+          refreshToken = res.body.data.refresh_token;
+        });
+    });
+
+    it('/api/v1/auth/logout (POST) - should logout user', () => {
+      return request(app.getHttpServer())
+        .post('/api/v1/auth/logout')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.success).toBe(true);
         });
     });
   });
@@ -49,6 +83,7 @@ describe('Booking Platform E2E (Phase 7)', () => {
     it('/api/v1/services (GET) - should list services', () => {
       return request(app.getHttpServer())
         .get('/api/v1/services')
+        .set('Authorization', `Bearer ${token}`)
         .expect(200);
     });
   });

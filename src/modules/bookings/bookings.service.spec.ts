@@ -9,13 +9,22 @@ import { BookingStatus } from '@prisma/client';
 describe('BookingsService', () => {
   let service: BookingsService;
 
-  const mockPrismaService = {
+  const mockPrismaService: any = {
     booking: {
       create: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       updateMany: jest.fn(),
+      count: jest.fn(),
+      findMany: jest.fn(),
     },
-    $transaction: jest.fn(),
+    service: {
+      findUnique: jest.fn(),
+    },
+    $transaction: jest.fn().mockImplementation(async (arg) => {
+      if (Array.isArray(arg)) return Promise.all(arg);
+      return arg(mockPrismaService);
+    }),
   };
 
   const mockServicesService = {
@@ -40,7 +49,7 @@ describe('BookingsService', () => {
 
   describe('create booking business rules', () => {
     it('should throw ConflictException if service is inactive', async () => {
-      mockServicesService.findById.mockResolvedValue({ isActive: false });
+      mockPrismaService.service.findUnique.mockResolvedValue({ isActive: false });
       
       await expect(service.create({
         customerName: 'Test',
@@ -48,11 +57,12 @@ describe('BookingsService', () => {
         bookingDate: '2026-08-15',
         bookingTime: '14:30:00',
         serviceId: 'uuid',
+        ianaTimezone: 'UTC',
       })).rejects.toThrow(ConflictException);
     });
 
     it('should throw BadRequestException for past dates', async () => {
-      mockServicesService.findById.mockResolvedValue({ isActive: true });
+      mockPrismaService.service.findUnique.mockResolvedValue({ isActive: true });
       
       await expect(service.create({
         customerName: 'Test',
@@ -60,17 +70,23 @@ describe('BookingsService', () => {
         bookingDate: '2000-01-01', // Past date
         bookingTime: '10:00:00',
         serviceId: 'uuid',
+        ianaTimezone: 'UTC',
       })).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('FSM transitions', () => {
     it('should prevent CANCELLED to COMPLETED transitions via updateMany atomicity', async () => {
+      // Mock ownership check
+      mockPrismaService.booking.findUnique.mockResolvedValueOnce({
+        service: { createdById: 'user-id' }
+      });
       // Mock result.count = 0 to simulate FSM rejection
       mockPrismaService.booking.updateMany.mockResolvedValue({ count: 0 });
-      mockPrismaService.booking.findUnique.mockResolvedValue({ status: BookingStatus.CANCELLED });
+      // Mock fallback query
+      mockPrismaService.booking.findUnique.mockResolvedValueOnce({ status: BookingStatus.CANCELLED });
 
-      await expect(service.updateStatus('uuid', BookingStatus.COMPLETED))
+      await expect(service.updateStatus('uuid', BookingStatus.COMPLETED, 'user-id'))
         .rejects.toThrow(BadRequestException);
     });
   });

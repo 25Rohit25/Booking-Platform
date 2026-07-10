@@ -45,10 +45,44 @@ export class AuthService {
     return result;
   }
 
-  async login(user: UserWithoutPassword) {
-    const payload = { email: user.email, sub: user.id };
+  async getTokens(userId: string, email: string) {
+    const payload = { email, sub: userId };
+    
+    const [access_token, refresh_token] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('jwt.secret'),
+        expiresIn: this.configService.get<string>('jwt.expiresIn'),
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('jwt.refreshSecret'),
+        expiresIn: this.configService.get<string>('jwt.refreshExpiresIn'),
+      }),
+    ]);
+
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token,
+      refresh_token,
     };
+  }
+
+  async login(user: UserWithoutPassword) {
+    const tokens = await this.getTokens(user.id, user.email);
+    await this.usersService.updateRefreshToken(user.id, tokens.refresh_token);
+    return tokens;
+  }
+
+  async refreshTokens(userId: string, refreshToken: string) {
+    const user = await this.usersService.getUserIfRefreshTokenMatches(refreshToken, userId);
+    if (!user) {
+      throw new UnauthorizedException('Access Denied');
+    }
+
+    const tokens = await this.getTokens(user.id, user.email);
+    await this.usersService.updateRefreshToken(user.id, tokens.refresh_token);
+    return tokens;
+  }
+
+  async logout(userId: string) {
+    await this.usersService.removeRefreshToken(userId);
   }
 }
