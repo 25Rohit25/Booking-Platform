@@ -1,4 +1,13 @@
-import { IsOptional, IsInt, Min, Max, IsString, IsIn, IsUUID, IsEnum } from 'class-validator';
+import {
+  IsOptional,
+  IsInt,
+  Min,
+  Max,
+  IsString,
+  IsIn,
+  IsUUID,
+  IsEnum,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { BookingStatus } from '@prisma/client';
@@ -11,7 +20,10 @@ export class QueryBookingDto {
   @Min(1)
   page?: number = 1;
 
-  @ApiPropertyOptional({ description: 'Number of items per page (max 100)', default: 10 })
+  @ApiPropertyOptional({
+    description: 'Number of items per page (max 100)',
+    default: 10,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -19,12 +31,17 @@ export class QueryBookingDto {
   @Max(100)
   limit?: number = 10;
 
-  @ApiPropertyOptional({ description: 'Filter by exact status', enum: BookingStatus })
+  @ApiPropertyOptional({
+    description: 'Filter by exact status',
+    enum: BookingStatus,
+  })
   @IsOptional()
   @IsEnum(BookingStatus)
   status?: BookingStatus;
 
-  @ApiPropertyOptional({ description: 'Filter by specific booking date (YYYY-MM-DD)' })
+  @ApiPropertyOptional({
+    description: 'Filter by specific booking date (YYYY-MM-DD)',
+  })
   @IsOptional()
   @IsString()
   bookingDate?: string;
@@ -34,12 +51,17 @@ export class QueryBookingDto {
   @IsUUID()
   serviceId?: string;
 
-  @ApiPropertyOptional({ description: 'Search term for customer name, email, or phone' })
+  @ApiPropertyOptional({
+    description: 'Search term for customer name, email, or phone',
+  })
   @IsOptional()
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ description: 'Field to sort by', enum: ['bookingDate', 'createdAt', 'status'] })
+  @ApiPropertyOptional({
+    description: 'Field to sort by',
+    enum: ['bookingDate', 'createdAt', 'status'],
+  })
   @IsOptional()
   @IsIn(['bookingDate', 'createdAt', 'status'])
   sortBy?: 'bookingDate' | 'createdAt' | 'status' = 'createdAt';

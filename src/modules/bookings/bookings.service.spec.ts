@@ -49,29 +49,37 @@ describe('BookingsService', () => {
 
   describe('create booking business rules', () => {
     it('should throw ConflictException if service is inactive', async () => {
-      mockPrismaService.service.findUnique.mockResolvedValue({ isActive: false });
-      
-      await expect(service.create({
-        customerName: 'Test',
-        customerEmail: 'test@example.com',
-        bookingDate: '2026-08-15',
-        bookingTime: '14:30:00',
-        serviceId: 'uuid',
-        ianaTimezone: 'UTC',
-      })).rejects.toThrow(ConflictException);
+      mockPrismaService.service.findUnique.mockResolvedValue({
+        isActive: false,
+      });
+
+      await expect(
+        service.create({
+          customerName: 'Test',
+          customerEmail: 'test@example.com',
+          bookingDate: '2026-08-15',
+          bookingTime: '14:30:00',
+          serviceId: 'uuid',
+          ianaTimezone: 'UTC',
+        }),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('should throw BadRequestException for past dates', async () => {
-      mockPrismaService.service.findUnique.mockResolvedValue({ isActive: true });
-      
-      await expect(service.create({
-        customerName: 'Test',
-        customerEmail: 'test@example.com',
-        bookingDate: '2000-01-01', // Past date
-        bookingTime: '10:00:00',
-        serviceId: 'uuid',
-        ianaTimezone: 'UTC',
-      })).rejects.toThrow(BadRequestException);
+      mockPrismaService.service.findUnique.mockResolvedValue({
+        isActive: true,
+      });
+
+      await expect(
+        service.create({
+          customerName: 'Test',
+          customerEmail: 'test@example.com',
+          bookingDate: '2000-01-01', // Past date
+          bookingTime: '10:00:00',
+          serviceId: 'uuid',
+          ianaTimezone: 'UTC',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -79,15 +87,18 @@ describe('BookingsService', () => {
     it('should prevent CANCELLED to COMPLETED transitions via updateMany atomicity', async () => {
       // Mock ownership check
       mockPrismaService.booking.findUnique.mockResolvedValueOnce({
-        service: { createdById: 'user-id' }
+        service: { createdById: 'user-id' },
       });
       // Mock result.count = 0 to simulate FSM rejection
       mockPrismaService.booking.updateMany.mockResolvedValue({ count: 0 });
       // Mock fallback query
-      mockPrismaService.booking.findUnique.mockResolvedValueOnce({ status: BookingStatus.CANCELLED });
+      mockPrismaService.booking.findUnique.mockResolvedValueOnce({
+        status: BookingStatus.CANCELLED,
+      });
 
-      await expect(service.updateStatus('uuid', BookingStatus.COMPLETED, 'user-id'))
-        .rejects.toThrow(BadRequestException);
+      await expect(
+        service.updateStatus('uuid', BookingStatus.COMPLETED, 'user-id'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

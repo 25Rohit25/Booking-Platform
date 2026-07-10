@@ -3,7 +3,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
 export class LoginDto {
-  @ApiProperty({ example: 'user@example.com', description: 'Registered email address' })
+  @ApiProperty({
+    example: 'user@example.com',
+    description: 'Registered email address',
+  })
   @IsEmail()
   @Transform(({ value }) => value?.toLowerCase())
   email: string;

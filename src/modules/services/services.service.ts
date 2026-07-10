@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { Prisma, Service } from '@prisma/client';
 import { CreateServiceDto } from './dto/create-service.dto';
@@ -19,8 +24,17 @@ export class ServicesService {
   }
 
   async findAll(query: QueryServiceDto) {
-    const { page = 1, limit = 10, isActive, minPrice, maxPrice, search, sortBy = 'createdAt', sortOrder = 'desc' } = query;
-    
+    const {
+      page = 1,
+      limit = 10,
+      isActive,
+      minPrice,
+      maxPrice,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
+
     const skip = (page - 1) * limit;
 
     const where: Prisma.ServiceWhereInput = {};
@@ -28,7 +42,7 @@ export class ServicesService {
     if (isActive !== undefined) {
       where.isActive = isActive;
     } else {
-      // By default, maybe we show all, or only active? The prompt says "Deleted services should not appear in active listings", 
+      // By default, maybe we show all, or only active? The prompt says "Deleted services should not appear in active listings",
       // but filtering by isActive=true/false is supported.
     }
 
@@ -90,11 +104,17 @@ export class ServicesService {
     return service;
   }
 
-  async update(id: string, userId: string, updateData: UpdateServiceDto): Promise<Service> {
+  async update(
+    id: string,
+    userId: string,
+    updateData: UpdateServiceDto,
+  ): Promise<Service> {
     const service = await this.findById(id);
 
     if (service.createdById !== userId) {
-      throw new ForbiddenException('You are not authorized to update this service');
+      throw new ForbiddenException(
+        'You are not authorized to update this service',
+      );
     }
 
     return this.prisma.service.update({
@@ -107,14 +127,21 @@ export class ServicesService {
     const service = await this.findById(id);
 
     if (service.createdById !== userId) {
-      throw new ForbiddenException('You are not authorized to delete this service');
+      throw new ForbiddenException(
+        'You are not authorized to delete this service',
+      );
     }
 
     try {
       await this.prisma.service.delete({ where: { id } });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
-        throw new ConflictException('Cannot delete a service that has existing bookings. Please mark it as inactive instead.');
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2003'
+      ) {
+        throw new ConflictException(
+          'Cannot delete a service that has existing bookings. Please mark it as inactive instead.',
+        );
       }
       throw error;
     }

@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -12,6 +16,7 @@ export class UsersService {
   async create(data: Prisma.UserCreateInput): Promise<UserWithoutPassword> {
     try {
       const user = await this.prisma.user.create({ data });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
     } catch (error) {
@@ -27,6 +32,7 @@ export class UsersService {
   async findByEmail(email: string): Promise<UserWithoutPassword | null> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) return null;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
     return result;
   }
@@ -41,11 +47,15 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
     return result;
   }
 
-  async updateRefreshToken(userId: string, refreshToken: string): Promise<void> {
+  async updateRefreshToken(
+    userId: string,
+    refreshToken: string,
+  ): Promise<void> {
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
     await this.prisma.user.update({
       where: { id: userId },
@@ -60,15 +70,22 @@ export class UsersService {
     });
   }
 
-  async getUserIfRefreshTokenMatches(refreshToken: string, userId: string): Promise<UserWithoutPassword | null> {
+  async getUserIfRefreshTokenMatches(
+    refreshToken: string,
+    userId: string,
+  ): Promise<UserWithoutPassword | null> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (!user || !user.hashedRefreshToken) {
       return null;
     }
 
-    const isRefreshTokenMatching = await bcrypt.compare(refreshToken, user.hashedRefreshToken);
+    const isRefreshTokenMatching = await bcrypt.compare(
+      refreshToken,
+      user.hashedRefreshToken,
+    );
     if (isRefreshTokenMatching) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
     }

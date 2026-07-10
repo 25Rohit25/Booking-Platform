@@ -68,7 +68,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-  
+
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document, {
     swaggerOptions: {
@@ -82,7 +82,9 @@ async function bootstrap() {
   // 8. Start Server
   await app.listen(port);
   logger.log(`🚀 Application is running on: http://localhost:${port}/api/v1`);
-  logger.log(`📚 Swagger documentation available at: http://localhost:${port}/api/docs`);
+  logger.log(
+    `📚 Swagger documentation available at: http://localhost:${port}/api/docs`,
+  );
 }
 
 bootstrap();

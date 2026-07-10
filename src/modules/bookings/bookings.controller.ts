@@ -1,5 +1,21 @@
-import { Controller, Get, Post, Body, Param, Patch, UseGuards, Query, ParseUUIDPipe, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  UseGuards,
+  Query,
+  ParseUUIDPipe,
+  Request,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { QueryBookingDto } from './dto/query-booking.dto';
@@ -14,9 +30,15 @@ export class BookingsController {
   @Post()
   @ApiOperation({ summary: 'Create a new booking (Public endpoint)' })
   @ApiResponse({ status: 201, description: 'Booking confirmed successfully.' })
-  @ApiResponse({ status: 400, description: 'Validation Error (e.g. Past date).' })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation Error (e.g. Past date).',
+  })
   @ApiResponse({ status: 404, description: 'Service Not Found.' })
-  @ApiResponse({ status: 409, description: 'Time slot conflict or inactive service.' })
+  @ApiResponse({
+    status: 409,
+    description: 'Time slot conflict or inactive service.',
+  })
   async create(@Body() createBookingDto: CreateBookingDto) {
     return this.bookingsService.create(createBookingDto);
   }
@@ -24,7 +46,10 @@ export class BookingsController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'List all bookings with pagination, search, and filters (Authenticated)' })
+  @ApiOperation({
+    summary:
+      'List all bookings with pagination, search, and filters (Authenticated)',
+  })
   @ApiResponse({ status: 200, description: 'Successfully retrieved bookings.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async findAll(@Query() query: QueryBookingDto) {
@@ -54,7 +79,11 @@ export class BookingsController {
     @Body() updateBookingStatusDto: UpdateBookingStatusDto,
     @Request() req: any,
   ) {
-    return this.bookingsService.updateStatus(id, updateBookingStatusDto.status, req.user.userId);
+    return this.bookingsService.updateStatus(
+      id,
+      updateBookingStatusDto.status,
+      req.user.userId,
+    );
   }
 
   @Patch(':id/cancel')
@@ -62,7 +91,10 @@ export class BookingsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Cancel a booking (Authenticated)' })
   @ApiResponse({ status: 200, description: 'Booking cancelled successfully.' })
-  @ApiResponse({ status: 400, description: 'Cannot cancel a completed booking.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot cancel a completed booking.',
+  })
   @ApiResponse({ status: 404, description: 'Booking Not Found.' })
   async cancel(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
     return this.bookingsService.cancel(id, req.user.userId);

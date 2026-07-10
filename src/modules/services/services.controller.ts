@@ -1,5 +1,23 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards, Request, Query, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Delete,
+  UseGuards,
+  Request,
+  Query,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
@@ -18,12 +36,17 @@ export class ServicesController {
   @ApiResponse({ status: 201, description: 'Service created successfully' })
   @ApiResponse({ status: 400, description: 'Validation Error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async create(@Body() createServiceDto: CreateServiceDto, @Request() req: any) {
+  async create(
+    @Body() createServiceDto: CreateServiceDto,
+    @Request() req: any,
+  ) {
     return this.servicesService.create(req.user.userId, createServiceDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'List services with pagination, filtering, and sorting' })
+  @ApiOperation({
+    summary: 'List services with pagination, filtering, and sorting',
+  })
   @ApiResponse({ status: 200, description: 'Successfully retrieved services' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findAll(@Query() query: QueryServiceDto) {
@@ -43,7 +66,10 @@ export class ServicesController {
   @ApiOperation({ summary: 'Update an existing service' })
   @ApiResponse({ status: 200, description: 'Service updated successfully' })
   @ApiResponse({ status: 400, description: 'Validation Error' })
-  @ApiResponse({ status: 403, description: 'Forbidden: You can only update your own services' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden: You can only update your own services',
+  })
   @ApiResponse({ status: 404, description: 'Service Not Found' })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -56,9 +82,15 @@ export class ServicesController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a service' })
   @ApiResponse({ status: 200, description: 'Service deleted successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden: You can only delete your own services' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden: You can only delete your own services',
+  })
   @ApiResponse({ status: 404, description: 'Service Not Found' })
-  @ApiResponse({ status: 409, description: 'Conflict: Service has existing bookings' })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict: Service has existing bookings',
+  })
   async remove(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
     await this.servicesService.remove(id, req.user.userId);
     return { deleted: true };

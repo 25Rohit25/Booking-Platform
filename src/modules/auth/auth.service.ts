@@ -15,7 +15,8 @@ export class AuthService {
 
   async register(registerDto: RegisterDto): Promise<UserWithoutPassword> {
     // Inject salt rounds from config or default to 10
-    const saltRounds = this.configService.get<number>('BCRYPT_SALT_ROUNDS') || 10;
+    const saltRounds =
+      this.configService.get<number>('BCRYPT_SALT_ROUNDS') || 10;
     const hashedPassword = await bcrypt.hash(registerDto.password, saltRounds);
 
     return this.usersService.create({
@@ -25,9 +26,12 @@ export class AuthService {
     });
   }
 
-  async validateUser(email: string, pass: string): Promise<UserWithoutPassword | null> {
+  async validateUser(
+    email: string,
+    pass: string,
+  ): Promise<UserWithoutPassword | null> {
     const user = await this.usersService.getUserWithPassword(email);
-    
+
     // Anti-timing attack protection: always run the bcrypt algorithm
     if (!user) {
       const dummyHash = await bcrypt.hash('dummy', 10);
@@ -47,15 +51,19 @@ export class AuthService {
 
   async getTokens(userId: string, email: string) {
     const payload = { email, sub: userId };
-    
+
     const [access_token, refresh_token] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('jwt.secret') || 'defaultSecret',
-        expiresIn: (this.configService.get<string>('jwt.expiresIn') || '15m') as any,
+        expiresIn: (this.configService.get<string>('jwt.expiresIn') ||
+          '15m') as any,
       }),
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('jwt.refreshSecret') || 'defaultRefreshSecret',
-        expiresIn: (this.configService.get<string>('jwt.refreshExpiresIn') || '7d') as any,
+        secret:
+          this.configService.get<string>('jwt.refreshSecret') ||
+          'defaultRefreshSecret',
+        expiresIn: (this.configService.get<string>('jwt.refreshExpiresIn') ||
+          '7d') as any,
       }),
     ]);
 
@@ -72,7 +80,10 @@ export class AuthService {
   }
 
   async refreshTokens(userId: string, refreshToken: string) {
-    const user = await this.usersService.getUserIfRefreshTokenMatches(refreshToken, userId);
+    const user = await this.usersService.getUserIfRefreshTokenMatches(
+      refreshToken,
+      userId,
+    );
     if (!user) {
       throw new UnauthorizedException('Access Denied');
     }

@@ -22,20 +22,23 @@ import { BookingsModule } from './modules/bookings/bookings.module';
       validationSchema: envValidationSchema,
       cache: true, // Improves performance by caching process.env
     }),
-    
+
     // Security: Rate Limiting
-    ThrottlerModule.forRoot([{
-      ttl: 60000, // 1 minute
-      limit: 100, // 100 requests per IP per minute
-    }]),
-    
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minute
+        limit: 100, // 100 requests per IP per minute
+      },
+    ]),
+
     // 2. Core Modules
     LoggerModule.forRoot({
       pinoHttp: {
         level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
-        transport: process.env.NODE_ENV !== 'production'
-          ? { target: 'pino-pretty', options: { colorize: true } }
-          : undefined,
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty', options: { colorize: true } }
+            : undefined,
         autoLogging: false, // We'll manage logging carefully or enable globally based on need
       },
     }),

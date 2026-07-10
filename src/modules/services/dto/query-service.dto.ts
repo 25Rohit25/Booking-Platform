@@ -1,4 +1,13 @@
-import { IsOptional, IsInt, Min, Max, IsBoolean, IsNumber, IsString, IsIn } from 'class-validator';
+import {
+  IsOptional,
+  IsInt,
+  Min,
+  Max,
+  IsBoolean,
+  IsNumber,
+  IsString,
+  IsIn,
+} from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -10,7 +19,10 @@ export class QueryServiceDto {
   @Min(1)
   page?: number = 1;
 
-  @ApiPropertyOptional({ description: 'Number of items per page (max 100)', default: 10 })
+  @ApiPropertyOptional({
+    description: 'Number of items per page (max 100)',
+    default: 10,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -41,7 +53,10 @@ export class QueryServiceDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ description: 'Field to sort by', enum: ['createdAt', 'price', 'duration'] })
+  @ApiPropertyOptional({
+    description: 'Field to sort by',
+    enum: ['createdAt', 'price', 'duration'],
+  })
   @IsOptional()
   @IsIn(['createdAt', 'price', 'duration'])
   sortBy?: 'createdAt' | 'price' | 'duration' = 'createdAt';

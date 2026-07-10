@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
-import request from 'supertest';
+import {
+  INestApplication,
+  ValidationPipe,
+  VersioningType,
+} from '@nestjs/common';
+import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { TransformInterceptor } from './../src/common/interceptors/transform.interceptor';
 
@@ -34,7 +38,11 @@ describe('Booking Platform E2E (Phase 7)', () => {
     it('/api/v1/auth/register (POST) - should create a new user', () => {
       return request(app.getHttpServer())
         .post('/api/v1/auth/register')
-        .send({ fullName: 'E2E User', email: testEmail, password: 'StrongPassword123!' })
+        .send({
+          fullName: 'E2E User',
+          email: testEmail,
+          password: 'StrongPassword123!',
+        })
         .expect(201)
         .expect((res) => {
           expect(res.body.success).toBe(true);
