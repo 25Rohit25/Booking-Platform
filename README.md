@@ -117,6 +117,44 @@ From here, you can execute API calls directly in your browser. (Note: For protec
 
 ---
 
+## 📈 Performance & Load Testing (k6)
+
+To demonstrate the enterprise-readiness of this API, a professional load-testing suite is included using [k6](https://k6.io/).
+
+### Prerequisites
+You must have [k6 installed](https://k6.io/docs/get-started/installation/) on your machine.
+Ensure the API is running (preferably `npm run start:prod`) before executing tests.
+
+### Running the Tests
+
+The `package.json` includes convenient npm scripts to execute the different load tests. Each test automatically generates a beautiful HTML summary report in the root directory (e.g., `smoke-summary.html`).
+
+```bash
+# 1. Smoke Test (Basic health check, minimal users)
+npm run load:smoke
+
+# 2. Services Load Test (Ramps up to 200 concurrent users browsing the catalog)
+npm run load:services
+
+# 3. Authentication Load Test (Simulates concurrent bcrypt hashing and login flows)
+npm run load:auth
+
+# 4. Bookings Load Test (Simulates concurrent authorized booking creation)
+npm run load:bookings
+
+# 5. Duplicate Booking Race-Condition Spike (100 users trying to book the same slot simultaneously)
+npm run load:duplicate
+
+# 6. Stress Test (Gradual ramp to 500 users to find system breaking points)
+npm run load:stress
+```
+
+### Test Goals & Metrics
+- **Performance:** Thresholds are set to ensure 95% of requests complete in under `500ms` (or `800ms` for heavy write operations).
+- **Concurrency Immunity:** The `load:duplicate` script is designed to hammer a single service at a specific time with 100 simultaneous requests. Thanks to Prisma transactions and Postgres row-level locks, exactly **one** request will succeed with a `201 Created`, while the remaining 99 are gracefully rejected with a `400/409 Conflict`. No duplicate data is ever created.
+
+---
+
 ## 🤔 Assumptions Made
 
 During the development of this platform, the following business-logic assumptions were made:

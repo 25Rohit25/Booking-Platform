@@ -20,7 +20,13 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "load:smoke": "k6 run load-tests/smoke-test.js",
+    "load:services": "k6 run load-tests/services-load.js",
+    "load:bookings": "k6 run load-tests/bookings-load.js",
+    "load:stress": "k6 run load-tests/stress-test.js",
+    "load:duplicate": "k6 run load-tests/duplicate-booking-test.js",
+    "load:auth": "k6 run load-tests/auth-load.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

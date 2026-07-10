@@ -90,10 +90,17 @@ export class BookingsService {
             serviceId: dto.serviceId,
           },
         });
+      }, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new ConflictException('This time slot is already booked for the selected service. Please choose a different date or time.');
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ConflictException('This time slot is already booked for the selected service. Please choose a different date or time.');
+        }
+        if (error.code === 'P2034') {
+          throw new ConflictException('Due to high demand, this time slot was just booked by another user. Please choose a different date or time.');
+        }
       }
       throw error;
     }
